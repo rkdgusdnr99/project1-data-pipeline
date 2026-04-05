@@ -1,10 +1,18 @@
 import random
+from faker import Faker
 
-def generate_log():
-	users = [1,2,3,4,5]
-	pages = ["home", "product", "cart"]
+fake = Faker('ko_KR') 
 
-	return {
-		"user_id": random.choice(users),
-		"page": random.choice(pages)
-	}
+def generate_user():
+    return {
+        "name": fake.name(),
+        "age": random.randint(1, 100),
+        "country": fake.country()
+    }
+
+def generate_log(user_ids):
+    pages = ["home", "product", "cart"]
+    return {
+        "user_id": random.choice(user_ids),
+        "page": random.choice(pages)
+    }
