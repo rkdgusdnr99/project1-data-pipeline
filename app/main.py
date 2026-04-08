@@ -1,9 +1,11 @@
 from db import get_connection
-from generator import generate_user, generate_log
-from dml import get_all_user_ids
+from generator import generate_user, generate_log, generate_countries
+from dml import get_all_user_ids, get_all_user_countries
 from psycopg2.extras import execute_values
+import itertools
+import string
 
-def insert_user(count=1000):
+def create_users(count=1000):
     conn = get_connection()
     cur = conn.cursor()
 
@@ -26,7 +28,7 @@ def insert_user(count=1000):
     conn.close()
 	
 
-def insert_log(count=1000000):
+def create_logs(count=1000000):
     # 1. DB에서 ID 가져오기
     existing_ids = get_all_user_ids()
     if not existing_ids:
@@ -53,6 +55,42 @@ def insert_log(count=1000000):
     conn.close()
     print("로그 저장 완료!")
 
+
+def create_countries():
+    # 1. DB에서 ID 가져오기
+    existing_countries = get_all_user_countries()
+    if not existing_countries:
+        print("유저가 없습니다! 먼저 유저부터 생성하세요.")
+        return
+    
+    # 2. 로그 생성
+    countries = []
+    code_pool = ("".join(p) for p in itertools.product(string.ascii_uppercase, repeat=2))
+    
+    for country_name in existing_countries:
+        try:
+            new_code = next(code_pool)
+        except StopIteration: # 676개 다 사용하면
+            new_code = "??"
+        country = generate_countries(country_name, new_code)
+        countries.append((country['code'], country['name'], country['region']))
+
+    # 3. DB 연결 및 execute_values 실행
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    query = "INSERT INTO countries (code, name, region) VALUES %s"
+    
+    print(f"{len(countries)}개 국가 삽입 시작...")
+    execute_values(cur, query, countries)
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("국가 저장 완료!")
+
+
 if __name__ == "__main__":
-	insert_user()
-	insert_log()
+    create_users()
+    create_logs()
+    create_countries()
