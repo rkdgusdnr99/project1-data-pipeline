@@ -89,7 +89,6 @@ def create_countries():
     conn.close()
     print("국가 저장 완료!")
 
-
 if __name__ == "__main__":
     create_users()
     create_logs()
